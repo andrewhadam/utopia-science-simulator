@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"strconv"
@@ -15,18 +17,21 @@ type Scientist struct {
 	TotalBooks     float32
 }
 
-var rate float64 = 1.5
-var weeks int = 10
+var (
+	rate         float64
+	weeks        int
+	reveDowntime int
+	fokDowntime  int
+)
+
 var scientists []Scientist
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// Represents % of time that Revelation will not be up
-var reveDowntime = 40
-
 // Represents % of tiem that Fountain of Knowledge will not be up
-var fokDowntime = 40
 
 func main() {
+
+	setup()
 
 	var numOfScientists = 5
 	var ticks = weeks * 7 * 24
@@ -34,8 +39,6 @@ func main() {
 	var adjustedRate = rate * 1
 
 	var ranNum int
-
-	setup()
 
 	for i := 0; i <= ticks; i++ {
 		ranNum = r.Intn(100)
@@ -73,7 +76,7 @@ func main() {
 }
 
 func addScientist(r string, l int) {
-	n := Scientist{Rank: "Recruit", Lifetime: 0, BookProduction: 100, TotalBooks: 0}
+	n := Scientist{Rank: "Recruit", Lifetime: 0, BookProduction: 70, TotalBooks: 0}
 	scientists = append(scientists, n)
 }
 
@@ -96,16 +99,16 @@ func incrementScientistTotalBooks() {
 
 func checkScientistRank() {
 	for i := 0; i < len(scientists); i++ {
-		if scientists[i].TotalBooks > 2399 && scientists[i].TotalBooks < 8160 {
-			scientists[i].BookProduction = 120
+		if scientists[i].TotalBooks > 1679 && scientists[i].TotalBooks < 5520 {
+			scientists[i].BookProduction = 80
 			scientists[i].Rank = "Novice"
 		}
-		if scientists[i].TotalBooks > 8159 && scientists[i].TotalBooks < 18240 {
-			scientists[i].BookProduction = 140
+		if scientists[i].TotalBooks > 5519 && scientists[i].TotalBooks < 12000 {
+			scientists[i].BookProduction = 90
 			scientists[i].Rank = "Graduate"
 		}
-		if scientists[i].TotalBooks > 18239 {
-			scientists[i].BookProduction = 160
+		if scientists[i].TotalBooks > 11999 {
+			scientists[i].BookProduction = 100
 			scientists[i].Rank = "Professor"
 		}
 	}
@@ -129,9 +132,48 @@ func calcUniBookProduction(percent float64, racialMod float64) float64 {
 }
 
 func setup() {
+
+	fmt.Println("Reading config file...")
+	file, err := ioutil.ReadFile("./config.json")
+
+	if err != nil {
+		fmt.Println(err.Error())
+
+	}
+
+	err = json.Unmarshal(file, &config)
+	fmt.Println(file)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	weeks = config.WeeksInAge
+	rate = config.ScientistGenerationRate
+	reveDowntime = config.RevelationDownTime
+	fokDowntime = config.FoundtainOfKnowledgeDowntime
+
+	fmt.Println(weeks)
+	fmt.Println(rate)
+	fmt.Println(reveDowntime)
+	fmt.Println(fokDowntime)
+
+	//	Token = config.Token
+	//	BotPrefix = config.BotPrefix
+
 	addScientist("basic", 0)
 	addScientist("basic", 0)
 	addScientist("basic", 0)
 	addScientist("basic", 0)
 	addScientist("basic", 0)
+
+}
+
+var config *configStruct
+
+type configStruct struct {
+	ScientistGenerationRate      float64 `json : "ScientistGenerationRate"`
+	WeeksInAge                   int     `json:"WeeksInAge"`
+	RevelationDownTime           int     `json:"RevelationDowntime"`
+	FoundtainOfKnowledgeDowntime int     `json:"FountainOfKnowledgeDowntime"`
 }
