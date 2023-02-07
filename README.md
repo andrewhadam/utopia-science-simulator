@@ -32,14 +32,16 @@ go build science.go
 ### Executing program
 
 * Update config.json  
+
 The config.json controls the different parameters throughout the simulator.  You'll want to update the values to meet your needs.  
-    "ScientistGenerationRate": This is the spawn rate of scientists  (Found: http://wiki.utopia-game.com/index.php?title=Science_Formulas)  
-    "WeeksInAge": Total number of weeks in the age you want to simulate  
-    "RevelationUptime": The percentage of time you expect Revelation to be up over the course of the age  (0 indicates you do not have Revelation)  
-    "FountainOfKnowledgeUptime": The percentage of time you expect Fountain of Knowledge to be up over the course of the age (0 indicates you do not have FoK)  
-    "UniversityPercentage": The average percentage of Universities you expect to have built when you have them    
-    "UniversityUptime": The percentage of time you expect to have Universities built throughout the age  (0 indicates you expect to never have Universities built) 
-    "RacialScienceProductionModifier": The racial modifier specific to your race pick (Currently does not function)  
+
+"ScientistGenerationRate": This is the spawn rate of scientists  (Found: http://wiki.utopia-game.com/index.php?title=Science_Formulas)  
+"WeeksInAge": Total number of weeks in the age you want to simulate  
+"RevelationUptime": The percentage of time you expect Revelation to be up over the course of the age  (0 indicates you do not have Revelation)  
+"FountainOfKnowledgeUptime": The percentage of time you expect Fountain of Knowledge to be up over the course of the age (0 indicates you do not have FoK)  
+"UniversityPercentage": The average percentage of Universities you expect to have built when you have them    
+"UniversityUptime": The percentage of time you expect to have Universities built throughout the age  (0 indicates you expect to never have Universities built) 
+"RacialScienceProductionModifier": The racial modifier specific to your race pick (Currently does not function)  
 
 * Run the Program
 Either run the executable
