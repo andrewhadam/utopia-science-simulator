@@ -13,65 +13,89 @@ import (
 type Scientist struct {
 	Rank           string
 	Lifetime       int
-	BookProduction float32
-	TotalBooks     float32
+	BookProduction float64
+	TotalBooks     float64
 }
 
 var (
-	rate         float64
-	weeks        int
-	reveDowntime int
-	fokDowntime  int
+	rate          float64
+	weeks         int
+	reveUptime    int
+	fokUptime     int
+	uniUptime     int
+	useReve       bool
+	useUni        bool
+	useFoK        bool
+	uniPercentage float64
 )
 
 var scientists []Scientist
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// Represents % of tiem that Fountain of Knowledge will not be up
-
 func main() {
 
 	setup()
 
-	var numOfScientists = 5
+	var totalScientists = 5
 	var ticks = weeks * 7 * 24
 	var sciGen float64 = 0
-	var adjustedRate = rate * 1
 
-	var ranNum int
+	var reveRandom, uniRandom int
 
 	for i := 0; i <= ticks; i++ {
-		ranNum = r.Intn(100)
-		fmt.Printf("Revelation Chance: %d\n", ranNum)
+		reveRandom = r.Intn(100) + 1
+		uniRandom = r.Intn(100) + 1
 
-		if ranNum >= 0 && ranNum < reveDowntime {
-			sciGen += adjustedRate
-			fmt.Printf("SciGen False: %f\n", sciGen)
-		} else {
-			sciGen += (adjustedRate * 1.3)
-			fmt.Printf("SciGen True: %f\n", sciGen)
+		switch {
+		case !useReve && !useUni:
+			sciGen += rate
+		case useReve && !useUni:
+			if reveRandom >= reveUptime {
+				sciGen += rate
+			} else {
+				sciGen += (rate * 1.3)
+			}
+		case !useReve && useUni:
+			if uniRandom > uniUptime {
+				sciGen += (rate)
+
+			} else { // And Universities are active this tick
+				sciGen += (rate * (1 + (calcUniScientistSpawnRate(uniPercentage, 0) / 100)))
+			}
+
+		case useReve && useUni:
+			// If Revelation is not active this tick...
+			if reveRandom >= reveUptime {
+				// And Universities are inactive this tick
+				if uniRandom > uniUptime {
+					sciGen += (rate)
+
+				} else { // And Universities are active this tick
+					sciGen += (rate * (1 + (calcUniScientistSpawnRate(uniPercentage, 0) / 100)))
+				}
+			} else { // Revelation is active this tick...
+				// And Universities are not active
+				if uniRandom > uniUptime {
+					sciGen += (rate * 1.3)
+				} else { // Universities are active
+					sciGen += (rate * 1.3 * (1 + (calcUniScientistSpawnRate(uniPercentage, 0) / 100)))
+				}
+			}
 		}
-
-		// sciGen += adjustedRate
 
 		// If science gen = 100 or more
 		if sciGen >= 100 {
 			sciGen = sciGen - 100
-			numOfScientists += 1
+			totalScientists += 1
 			addScientist("basic", 0)
 		}
 		incrementScientistLifetime()
-		incrementScientistTotalBooks()
+		incrementScientistTotalBooks(uniRandom)
 		checkScientistRank()
 	}
 
-	fmt.Println(math.Mod(float64(ticks)*rate, 100))
-	fmt.Println((float64(ticks) * rate / 100))
-	fmt.Println(numOfScientists)
-
 	fmt.Println("Total Scientists: " + strconv.Itoa(len(scientists)))
-	fmt.Printf("Total Books Generated: %f\n", calcTotalBooks())
-	fmt.Printf("University Scientist Spawn Rate: %.2f\n", calcUniScientistSpawnRate(18, 0))
+	fmt.Printf("Total Books Generated: %.0f\n", calcTotalBooks())
 
 }
 
@@ -86,17 +110,50 @@ func incrementScientistLifetime() {
 	}
 }
 
-func incrementScientistTotalBooks() {
+func incrementScientistTotalBooks(uniRandom int) {
+	var fokRandom = r.Intn(100)
+
 	for i := 0; i < len(scientists); i++ {
-		var ranNum = r.Intn(100)
-		if ranNum >= 0 && ranNum < fokDowntime {
-			scientists[i].TotalBooks += scientists[i].BookProduction
-		} else {
-			scientists[i].TotalBooks += (scientists[i].BookProduction * 1.1)
+		switch {
+		// Both FoK and Universities are not used this tick
+		case !useFoK && !useUni:
+			scientists[i].TotalBooks += (scientists[i].BookProduction)
+		// FoK is possible but Universities are not active
+		case useFoK && !useUni:
+			if fokRandom > fokUptime {
+				scientists[i].TotalBooks += (scientists[i].BookProduction)
+			} else {
+				scientists[i].TotalBooks += (scientists[i].BookProduction * 1.1)
+			}
+		case !useFoK && useUni:
+			if uniRandom > uniUptime {
+				scientists[i].TotalBooks += scientists[i].BookProduction
+			} else { // and we do have universities active this tick
+				scientists[i].TotalBooks += (scientists[i].BookProduction * (1 + (calcUniBookProduction(uniPercentage, 0) / 100)))
+			}
+		case useFoK && useUni:
+			// If FoK is not active...
+			if fokRandom > fokUptime {
+				// And we do not have universities this tick
+				if uniRandom > uniUptime {
+					scientists[i].TotalBooks += scientists[i].BookProduction
+				} else { // and we do have universities active this tick
+					scientists[i].TotalBooks += (scientists[i].BookProduction * (1 + (calcUniBookProduction(uniPercentage, 0) / 100)))
+				}
+			} else { // FoK is always active
+				// And we do not have univeristies this tick
+				if uniRandom > uniUptime {
+					fmt.Println("here")
+
+					scientists[i].TotalBooks += scientists[i].BookProduction * 1.1
+				} else {
+					fmt.Println("here2")
+					scientists[i].TotalBooks += (scientists[i].BookProduction * (1 + (calcUniBookProduction(uniPercentage, 0) / 100)) * 1.1)
+				}
+			}
 		}
 	}
 }
-
 func checkScientistRank() {
 	for i := 0; i < len(scientists); i++ {
 		if scientists[i].TotalBooks > 1679 && scientists[i].TotalBooks < 5520 {
@@ -114,8 +171,8 @@ func checkScientistRank() {
 	}
 }
 
-func calcTotalBooks() float32 {
-	var totalBooks float32 = 0
+func calcTotalBooks() float64 {
+	var totalBooks float64 = 0
 
 	for i := 0; i < len(scientists); i++ {
 		totalBooks += scientists[i].TotalBooks
@@ -138,11 +195,9 @@ func setup() {
 
 	if err != nil {
 		fmt.Println(err.Error())
-
 	}
 
 	err = json.Unmarshal(file, &config)
-	fmt.Println(file)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -150,16 +205,22 @@ func setup() {
 
 	weeks = config.WeeksInAge
 	rate = config.ScientistGenerationRate
-	reveDowntime = config.RevelationDownTime
-	fokDowntime = config.FoundtainOfKnowledgeDowntime
+	reveUptime = config.RevelationDownTime
+	fokUptime = config.FoundtainOfKnowledgeDowntime
+	uniUptime = config.UniversityUptime
+	uniPercentage = config.UniversityPercentage
 
-	fmt.Println(weeks)
-	fmt.Println(rate)
-	fmt.Println(reveDowntime)
-	fmt.Println(fokDowntime)
+	if reveUptime != 0 {
+		useReve = true
+	}
 
-	//	Token = config.Token
-	//	BotPrefix = config.BotPrefix
+	if uniUptime != 0 {
+		useUni = true
+	}
+
+	if fokUptime != 0 {
+		useFoK = true
+	}
 
 	addScientist("basic", 0)
 	addScientist("basic", 0)
@@ -172,8 +233,11 @@ func setup() {
 var config *configStruct
 
 type configStruct struct {
-	ScientistGenerationRate      float64 `json : "ScientistGenerationRate"`
-	WeeksInAge                   int     `json:"WeeksInAge"`
-	RevelationDownTime           int     `json:"RevelationDowntime"`
-	FoundtainOfKnowledgeDowntime int     `json:"FountainOfKnowledgeDowntime"`
+	ScientistGenerationRate         float64 `json : "ScientistGenerationRate"`
+	WeeksInAge                      int     `json:"WeeksInAge"`
+	RevelationDownTime              int     `json:"RevelationUptime"`
+	FoundtainOfKnowledgeDowntime    int     `json:"FountainOfKnowledgeUpime"`
+	UniversityPercentage            float64 `json:"UniversityPercentage"`
+	RacialScienceProductionModifier float64 `json:"RacialScienceProductionModifier"`
+	UniversityUptime                int     `json:"UniversityUptime"`
 }
