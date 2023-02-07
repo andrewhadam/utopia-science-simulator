@@ -40,7 +40,7 @@ The config.json controls the different parameters throughout the simulator.  You
 **RevelationUptime**: The percentage of time you expect Revelation to be up over the course of the age  (0 indicates you do not have Revelation)  
 **FountainOfKnowledgeUptime**: The percentage of time you expect Fountain of Knowledge to be up over the course of the age (0 indicates you do not have FoK)  
 **UniversityPercentage**: The average percentage of Universities you expect to have built when you have them    
-**UniversityUptime**: The percentage of time you expect to have Universities built throughout the age  (0 indicates you expect to never have Universities built) 
+**UniversityUptime**: The percentage of time you expect to have Universities built throughout the age  (0 indicates you expect to never have Universities built)  
 **RacialScienceProductionModifier**: The racial modifier specific to your race pick (Currently does not function)  
 
 * Run the Program
