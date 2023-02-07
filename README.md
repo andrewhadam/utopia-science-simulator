@@ -58,6 +58,9 @@ or
 ```
 go run science.go
 ```
+## Authors
+
+Utopia/MUGA Name: Roost
 
 ## Version History
 
